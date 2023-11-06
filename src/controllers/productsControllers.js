@@ -1,9 +1,9 @@
-const productService = require('../services/productsServices')
+const {productsServices} = require('../repositories/index.repositories')
 
-//Obtener lista de productos
-async function getProducts(req, res) {
+//Obtener los productos
+const getProducts = async (req, res) => {
     try {
-        let products = await productService.getProducts()
+        let products = await productsServices.getProducts()
 
         const pageSize = parseInt(req.query.limit) || 10;  //Query limit opcional
         const page = parseInt(req.query.page) || 1;        //Query page opcional
@@ -18,7 +18,7 @@ async function getProducts(req, res) {
             sort: ({ "precio": orden }) || products
         };
 
-        let result = await productService.paginateProducts(filtro, options)
+        let result = await productsServices.paginateProducts(filtro, options)
 
         res.send({ result: "Success", payload: result });
         console.log(result);
@@ -30,11 +30,11 @@ async function getProducts(req, res) {
 
 
 //Obtener producto por ID
-async function getProductById(req, res) {
+const getProductById = async (req, res) => {
     try {
         let { pid } = req.params;
 
-        let result = await productService.getProductById(pid)
+        let result = await productsServices.getProductById(pid)
 
         res.send({ result: "Success", payload: result });
 
@@ -45,7 +45,7 @@ async function getProductById(req, res) {
 
 
 //Agregar productos
-async function addProducts(req, res) {
+const createProducts = async(req, res) => {
     try {
         let { nombre, categoria, precio, stock, imagen } = req.body
 
@@ -53,7 +53,15 @@ async function addProducts(req, res) {
             res.send({ status: "error", error: "Faltan parámetros para crear el producto." })
         }
 
-        let result = await productService.addProducts(nombre, categoria, precio, stock, imagen)
+        let product = {
+            nombre,
+            categoria,
+            precio,
+            stock,
+            imagen
+        }
+
+        let result = await productsServices.createProduct(product)
 
         res.send({ result: "Success", payload: result });
 
@@ -62,14 +70,13 @@ async function addProducts(req, res) {
     }
 }
 
-
 //Actualizar un producto
-async function updateProduct(req, res) {
+const updateProduct = async (req, res) => {
     try {
         let { pid } = req.params;
         let productToReplace = req.body;
 
-        let result = await productService.updateProduct(pid, productToReplace)
+        let result = await productsServices.updateProduct(pid, productToReplace)
 
         res.send({ result: "Success", payload: result });
 
@@ -78,13 +85,12 @@ async function updateProduct(req, res) {
     }
 }
 
-
 //Eliminar producto por su ID.
-async function deleteProductById(req, res) {
+const deleteProduct = async (req, res) => {
     try {
         let { pid } = req.params;
 
-        let result = await productService.deleteProductById(pid)
+        let result = await productsServices.deleteProduct(pid)
 
         res.send({ result: "Success", payload: result });
 
@@ -93,11 +99,10 @@ async function deleteProductById(req, res) {
     }
 }
 
-
 module.exports = {
     getProducts,
     getProductById,
-    addProducts,
+    createProducts,
     updateProduct,
-    deleteProductById
+    deleteProduct
 }
