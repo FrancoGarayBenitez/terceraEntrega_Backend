@@ -1,10 +1,10 @@
 class UserDTO {
     constructor(user) {
-        this.full_name = user.first_name + user.last_name
+        this.full_name = user.name? user.name : user.first_name + " " + user.last_name
         this.email = user.email
         this.age = user.age
         this.password = user.password
-        this.active = true
+        this.role = user.role ? user.role : "user"
         this.phone = user.phone ? user.phone.split("-").join('') : ''
     }
 }

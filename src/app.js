@@ -21,7 +21,8 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 app.use(session({
     store: new MongoDBStore({
         uri: "mongodb+srv://francogaray4:fg_dbUser_84@cluster0.9vspn3d.mongodb.net/ecommerceProyectoFinal?retryWrites=true&w=majority",
-        collection: 'mySessions'
+        collection: 'mySessions',
+        ttl: 1000
     }),
     secret: "coderSecret",
     resave: false,
@@ -43,14 +44,25 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Config Nodemailer
+const nodemailer = require('nodemailer')
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+        user:"francogaray2314@gmail.com",
+        pass:"turt yiwp ufsb baxx"
+    }
+})
 
 //Rutas
 const cartRouter = require('./routes/cart.router')
-const orderRouter = require('./routes/order.router')
+const ticketRouter = require('./routes/ticket.router')
 const productsRouter = require('./routes/products.router')
 const usersRouter = require('./routes/users.router')
 
 app.use("/api/cart", cartRouter)
-app.use("/api/order", orderRouter)
+app.use("/api/ticket", ticketRouter)
 app.use("/api/products", productsRouter)
-app.use("/api/users", usersRouter)
+app.use("/api/sessions", usersRouter)
+
+module.exports = {transporter}

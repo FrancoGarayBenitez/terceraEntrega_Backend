@@ -10,6 +10,11 @@ class CartRepository {
         return result
     }
 
+    getCartById = async (cid) => {
+        let result = await this.dao.getById(cid)
+        return result
+    }
+    
     createCart = async (cart) => {
         let cartToInsert = new CartDTO(cart)
         let result = await this.dao.create(cartToInsert)
@@ -18,16 +23,6 @@ class CartRepository {
 
     updateCart = async (cid, cart) => {
         let result = await this.dao.update(cid, cart)
-        return result
-    }
-
-    addQuantityInProduct = (cart, indexProduct, quantity) => {
-        let result = this.dao.addQuantity(cart, indexProduct, quantity)
-        return result
-    }
-
-    addProductInCart = (cart, pid, quantity) => {
-        let result = this.dao.addProduct(cart, pid, quantity)
         return result
     }
 

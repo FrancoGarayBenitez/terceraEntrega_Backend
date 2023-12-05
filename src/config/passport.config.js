@@ -3,7 +3,8 @@ const passport = require('passport');
 const { userModel } = require('../dao/mongo/models/userModel');
 //Import utils.js
 const { createHash } = require('../utils');
-
+//Import Roles
+const { ROLES } = require('../middlewares/authJwt')
 
 const initializePassport = () => {
 
@@ -11,39 +12,50 @@ const initializePassport = () => {
     //Estrategia local para registrarse.
     const local = require('passport-local');
     const LocalStrategy = local.Strategy;
+    const { usersServices } = require('../repositories/index.repositories')
 
-    passport.use("local", new LocalStrategy({ usernameField: "email" },
-        async function (username, password, done) {
+    passport.use("local", new LocalStrategy({passReqToCallback:true, usernameField: "email" },
+        async (req, username, password, done) => {
 
-            const { first_name, last_name, email, age } = req.body;
-            await userModel.findOne({ email: username }, async function (err, user) {
+            const { first_name, last_name, email, age, role } = req.body
+
+                try {
+                //Buscamos usuario en la base
+                let user = await usersServices.getUserByEmail(username)
 
                 //Validación si existe el usuario.
                 if (user) {
-                    console.log("El usuario ya existe.");
-                    return done(null, false);
-
-                } else if (!user) {
-                    const newUser = {
-                        first_name,
-                        last_name,
-                        email,
-                        age,
-                        password: createHash(password)
-                    }
-                    //Enviamos usuario creado a la base.
-                    let result = await userModel.create(newUser);
-
-                    //Retorno del resultado.
-                    return done(null, result);
-
-                } else {
-                    if (err) { return done(err); }
+                    return done("El usuario ya existe.", false);
                 }
 
-            });
-        }
-    ));
+                //Si no existe, se creará uno nuevo con los datos del body.
+                const newUser = {
+                    first_name,
+                    last_name,
+                    email,
+                    age,
+                    password: createHash(password)
+                }
+
+                //Validar si se ingresa un rol
+                if (role) {
+                    if (ROLES.includes(role)) {
+                        newUser.role = role
+                    } else {
+                        return done("Invalid role", false);
+                    }
+                }
+
+                let result = await usersServices.createUser(newUser)
+
+                //Retorno del resultado.
+                return done(null, result);
+
+            } catch (error) {
+                return done("Error al obtener el usuario." + error);
+            }
+    
+        }))
 
 
     //-------------------------------------------------------//
@@ -52,62 +64,70 @@ const initializePassport = () => {
     //Import config dotenv
     const config = require('./config.dotenv')
 
-    passport.use(new GitHubStrategy({
-        clientID: "Iv1.deeb2f97c9cba1bc",
-        clientSecret: "33c286d7e9b81fbca660ebacaa124b3a6aff8bd3",
+    passport.use("github", new GitHubStrategy({
+        clientID: config.clientId,
+        clientSecret: config.clientSecret,
         callbackURL: "http://localhost:8080/api/sessions/githubcallback"
     },
-        async function (accessToken, refreshToken, profile, done) {
-            await userModel.findOne({ email: profile._json.email }, async function (err, user) {
+        async (accessToken, refreshToken, profile, done) => {
 
-                if (!user) {
-                    let newUser = {
-                        first_name: profile._json.name,
-                        last_name: "",
-                        age: "",
-                        email: profile._json.email,
-                        password: ""
+            try {
+                console.log(profile);
+
+                let user = await usersServices.getUserByEmail(profile._json.email)
+    
+                    if (!user) {
+                        let newUser = {
+                            name: profile._json.name,
+                            age: 27,
+                            email: profile._json.email,
+                        }
+    
+                        let result = await usersServices.createUser(newUser);
+    
+                        done(null, result)
+                        
+                    } else {
+                        done(null, user)
                     }
 
-                    let result = await userModel.create(newUser);
-
-                    done(null, result)
-
-                } else if (user) {
-                    done(null, user)
-                } else {
-                    return done(err, user);
-                }
-
-            });
+            } catch (error) {
+                return done(error);
+            }
         }
     ));
 
 
     //-------------------------------------------------------//
     //Estrategia para logearse con JWT
-    const JwtStrategy = require('passport-jwt').Strategy,
-        ExtractJwt = require('passport-jwt').ExtractJwt;
-    const opts = {}
+    const jwt = require('passport-jwt');
 
-    const cookieExtractor = function (req) {
-        const token = null;
-        if (req && req.cookies) {
-            token = req.cookies['jwt'];
+        const cookieExtractor = req => {
+            let token = null;
+    
+            if (req && req.cookies) {
+                token = req.cookies["jwtCookie"]
+            }
+    
+            return token;
         }
-        return token;
-    };
-
-    opts.jwtFromRequest = cookieExtractor;
-    opts.secretOrKey = 'coderSecret';
-
-    passport.use(new JwtStrategy(opts, function (jwt_payload, done) {
-        try {
-            return done(null, jwt_payload)
-        } catch (error) {
-            return done(error)
+    
+        const JWTStrategy = jwt.Strategy;
+        const ExtractJWT = jwt.ExtractJwt;
+    
+        passport.use("jwt", new JWTStrategy({
+    
+            jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor]),
+            secretOrKey: "coderSecret"
+    
+        }, async (jwt_payload, done) => {
+            try {
+                return done(null, jwt_payload)
+            } catch (error) {
+                return done(error)
+            }
         }
-    }));
+        ))
 
 
     //-------------------------------------------------------//

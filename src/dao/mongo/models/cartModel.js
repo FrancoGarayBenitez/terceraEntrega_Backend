@@ -1,23 +1,19 @@
 const mongoose = require('mongoose');
+const {Schema} = mongoose
 const cartCollection = "Carts";
 
 const cartSchema = new mongoose.Schema({
     title: String,
-    products: []
-    // products: [
-    //     {
-    //         type: mongoose.SchemaTypes.ObjectId,
-    //         ref: "products",
-    //         autopopulate: true,
-    //         product_sku: { type: String, required: true },
-    //         quantity: { type: Number, default: 1 }
-    //     }
-    // ],
-    // default: []
+    products_list: [
+        {
+            product: {
+                type: Schema.Types.ObjectId,
+                ref: "Products"
+            },
+            quantity: { type: Number, default: 1 }
+        }
+    ]
 })
-
-// //Populate
-// cartSchema.plugin(require('mongoose-autopopulate'));
 
 const cartModel = mongoose.model(cartCollection, cartSchema);
 

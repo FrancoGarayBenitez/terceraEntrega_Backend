@@ -1,6 +1,6 @@
 const {Router} = require('express')
 const router = Router()
-
+const authJwt = require('../middlewares/authJwt')
 const productsControllers = require('../controllers/productsControllers')
 
 //Obtener lista de productos
@@ -10,13 +10,13 @@ router.get("/", productsControllers.getProducts)
 router.get("/:pid", productsControllers.getProductById)
 
 //Agregar productos
-router.post("/", productsControllers.createProducts)
+router.post("/", authJwt.verifyToken, authJwt.isAdmin, productsControllers.createProducts)
 
 //Actualizar un producto
-router.put("/:pid", productsControllers.updateProduct)
+router.put("/:pid", authJwt.verifyToken, authJwt.isAdmin, productsControllers.updateProduct)
 
 //Eliminar producto por su ID.
-router.delete("/:pid", productsControllers.deleteProduct)
+router.delete("/:pid", authJwt.verifyToken, authJwt.isAdmin, productsControllers.deleteProduct)
 
 module.exports = router;
 

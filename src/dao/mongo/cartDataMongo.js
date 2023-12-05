@@ -2,26 +2,22 @@ const { cartModel } = require('./models/cartModel');
 
 class CartMongo {
     constructor() {
-
     }
 
     get = async () => {
-        return await cartModel.find()
+        let cart = await cartModel.find().populate('products_list.product')
+        return cart
     }
 
-    create = async (title) => {
-        return await cartModel.create({ title })
+    getById = async (cid) => await cartModel.findOne({_id: cid}).populate('products_list.product')
+
+    create = async (cart) => {
+        return await cartModel.create(cart)
     }
 
     update = async (cid, cart) => {
         return await cartModel.updateOne({ _id: cid }, cart)
     }
-
-    // addQuantity = (cart, indexProduct, quantity) => {
-    //     cart.products[indexProduct].quantity += quantity || 1
-    // }
-
-    // addProduct = (cart, pid, quantity) => cart.products.push({ product: pid, quantity: quantity, product_sku: pid })
 
 }
 

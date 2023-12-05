@@ -3,7 +3,7 @@ const config = require('../config/config.dotenv');
 let Cart
 let Products
 let Users
-let Order
+let Ticket
 
 switch (config.persistence) {
     case "MONGO":
@@ -21,29 +21,17 @@ switch (config.persistence) {
         const CartMongo = require('./mongo/cartDataMongo')
         const ProductsMongo = require('./mongo/productsDataMongo')
         const UsersMongo = require('./mongo/usersDataMongo')
-        const OrderMongo = require('./mongo/orderDataMongo')
+        const TicketMongo = require('./mongo/ticketDataMongo')
 
         Cart = CartMongo
         Products = ProductsMongo
         Users = UsersMongo
-        Order = OrderMongo
-
-        break;
-
-    case "MEMORY":
-        const CartMemory = require('./memory/cartDataMemory')
-        const ProductsMemory = require('./memory/productsDataMemory')
-        const UsersMemory = require('./memory/usersDataMemory')
-        const OrderMemory = require('./memory/orderDataMemory')
-
-        Cart = CartMemory
-        Products = ProductsMemory
-        Users = UsersMemory
-        Order = OrderMemory
+        Ticket = TicketMongo
 
         break;
 
     default:
+        console.log("Error al conectar");
         break;
 }
 
@@ -52,5 +40,5 @@ module.exports = {
     Cart,
     Products,
     Users,
-    Order
+    Ticket
 }

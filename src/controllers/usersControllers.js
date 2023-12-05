@@ -18,24 +18,32 @@ const renderViewLogin = (req, res) => {
     }
 }
 
-//Renderizar vista del perfil una vez logeado
-const renderViewProfile = (req, res) => {
+// Obtener lista de usuarios
+const getUsersList = async (req, res) => {
     try {
-        if (!req.user) {
-            return res.redirect('/api/sessions');
-        }
+        let users_list = await usersServices.getUsers()
 
-        let { first_name, last_name, email, age, role } = req.session.user;
-
-        res.render('profile.handlebars', {
-            first_name, last_name, email, age, role
-        })
-
+        res.status(200).json({message:"Success", payload:users_list})
+        
     } catch (error) {
-        res.status(500).send("Error de presentación.")
+        res.status(400).json({message:"Error al obtener lista de usuarios."})
     }
 }
 
+// Obtener usuario por ID
+const userById = async (req, res) => {
+    try {
+        let {uid} = req.params
+        let user = await usersServices.getUserById(uid)
+
+        if (!user) return res.send({ message: "Usuario no registrado" })
+
+        res.status(200).json({message:"Success", payload:user})
+
+    } catch (error) {
+        res.status(404).json("Error al obtener usuario.")
+    }
+}
 //--------------------------------------------------------------------//
 
 //Destruir session
@@ -68,7 +76,9 @@ const failRegister = (req, res) => {
     res.send({ error: "Failed" })
 }
 
+
 //--------------------------------------------------------------------//
+
 
 //Autenticación con JWT
 const authenticateWithJwt = async (req, res) => {
@@ -84,23 +94,23 @@ const authenticateWithJwt = async (req, res) => {
         if (!isValidatePassword(user, password)) return res.send({ message: "Contraseña incorrecta." });
 
         //Creación del token.
-        let token = jwt.sign({ email, password }, "coderSecret", { expiresIn: "24h" });
+        const jwt = require('jsonwebtoken');
+        let token = jwt.sign({ id: user._id }, "coderSecret", { expiresIn: "24h" });
 
         //El cliente envía sus credenciales mediante una cookie.
-        res.cookie("jwt", token, {
+        res.cookie("jwtCookie", token, {
             maxAge: 60 * 60 * 1000,
             httpOnly: true
         })
 
         req.session.user = {
-            first_name: user.first_name,
-            last_name: user.last_name,
+            full_name: user.full_name,
             age: user.age,
             email: user.email,
             role: user.role,
         }
 
-        res.redirect("/api/sessions/profile")
+        res.redirect("/api/sessions/current")
 
     } catch (error) {
         res.status(500).send("Error al logearse.")
@@ -110,7 +120,20 @@ const authenticateWithJwt = async (req, res) => {
 
 //Ruta para devolver el actual usuario.
 const currentUser = (req, res) => {
-    res.send(req.user)
+    try {
+        if (!req.user) {
+            return res.redirect('/api/sessions');
+        }
+
+        let { full_name, email, age, role } = req.session.user;
+
+        res.render('current.handlebars', {
+            full_name, email, age, role
+        })
+
+    } catch (error) {
+        res.status(500).send("Error de presentación.")
+    }
 }
 
 
@@ -118,8 +141,9 @@ const currentUser = (req, res) => {
 
 //Autenticación. Estrategia con GitHub.
 const authenticateWithGitHub = (req, res) => {
+    console.log(req.user);
     req.session.user = req.user;
-    res.redirect("/api/sessions/profile")
+    res.redirect("/api/sessions/current")
 }
 
 //--------------------------------------------------------------------//
@@ -162,7 +186,8 @@ const changePassword = async (req, res) => {
 module.exports = {
     renderViewRegister,
     renderViewLogin,
-    renderViewProfile,
+    getUsersList,
+    userById,
     destroySession,
     registerUser,
     failRegister,

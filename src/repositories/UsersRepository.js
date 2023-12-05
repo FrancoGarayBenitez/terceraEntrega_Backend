@@ -25,11 +25,6 @@ class UserRepository {
         return result
     }
 
-    addCartInUser = async (cid, user) => {
-        let result = await this.dao.addCart(cid, user)
-        return result
-    }
-
     createUser = async (user) => {
         let userToInsert = new UserDTO(user)
         let result = await this.dao.create(userToInsert)

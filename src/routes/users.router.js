@@ -9,8 +9,11 @@ router.get("/register", usersControllers.renderViewRegister)
 //Renderizar vista de login
 router.get("/", usersControllers.renderViewLogin)
 
-//Renderizar vista del perfil una vez logeado
-router.get('/profile', usersControllers.renderViewProfile)
+// Obtener lista de usuarios
+router.get("/users_list", usersControllers.getUsersList)
+
+// Obtener usuario por ID
+router.get("/user/:uid", usersControllers.userById)
 
 //--------------------------------------------------------------------//
 
@@ -28,7 +31,7 @@ router.get('/failRegister', usersControllers.failRegister)
 //--------------------------------------------------------------------//
 
 //Autenticación con JWT
-router.post("/", passport.authenticate('jwt', { session: false }), usersControllers.authenticateWithJwt)
+router.post("/", usersControllers.authenticateWithJwt)
 
 //Ruta para devolver el actual usuario.
 router.get("/current", passport.authenticate("jwt", { session: false }), usersControllers.currentUser)
@@ -36,7 +39,7 @@ router.get("/current", passport.authenticate("jwt", { session: false }), usersCo
 //--------------------------------------------------------------------//
 
 //Autenticación. Estrategia con GitHub.
-router.get("/github", passport.authenticate("github", { scope: ["user:email"] }))
+router.get("/github", passport.authenticate("github", { scope: ["user:email"] }), async (req, res) => { })
 
 router.get("/githubcallback", passport.authenticate("github", { failureRedirect: "/api/sessions/" }), usersControllers.authenticateWithGitHub)
 

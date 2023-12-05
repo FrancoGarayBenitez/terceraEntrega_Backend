@@ -3,25 +3,28 @@ const {productsServices} = require('../repositories/index.repositories')
 //Obtener los productos
 const getProducts = async (req, res) => {
     try {
-        let products = await productsServices.getProducts()
-
         const pageSize = parseInt(req.query.limit) || 10;  //Query limit opcional
         const page = parseInt(req.query.page) || 1;        //Query page opcional
-        const orden = req.query.sort;                      //Query sort opcional
+
         let filtro = {}
         if (req.query.categoria) filtro = { categoria: req.query.categoria }
         if (req.query.stock) filtro = { stock: req.query.stock }
 
+        let orden
+        if (req.query.sort) {
+            orden = {precio: req.query.sort}
+        } else {
+            orden = null
+        }
+
         const options = {
             page,
             limit: pageSize,
-            sort: ({ "precio": orden }) || products
+            sort: orden
         };
 
         let result = await productsServices.paginateProducts(filtro, options)
-
         res.send({ result: "Success", payload: result });
-        console.log(result);
 
     } catch (error) {
         res.send({ status: error, error: "Error al obtener información de los productos." })
@@ -47,14 +50,14 @@ const getProductById = async (req, res) => {
 //Agregar productos
 const createProducts = async(req, res) => {
     try {
-        let { nombre, categoria, precio, stock, imagen } = req.body
+        let { title, categoria, precio, stock, imagen } = req.body
 
-        if (!nombre || !categoria || !precio || !stock || !imagen) {
+        if (!title || !categoria || !precio || !stock || !imagen) {
             res.send({ status: "error", error: "Faltan parámetros para crear el producto." })
         }
 
         let product = {
-            nombre,
+            title,
             categoria,
             precio,
             stock,

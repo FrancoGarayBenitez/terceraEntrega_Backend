@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const productCollection = "products";
+const productCollection = "Products";
 
 
 const productSchema = new mongoose.Schema({
@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema({
     categoria: { type: String, required: true },
     precio: { type: Number, required: true },
     stock: { type: Number, required: true },
-    imagen: { type: String, required: true }
+    imagen: { type: String, required: true },
 })
 
 
